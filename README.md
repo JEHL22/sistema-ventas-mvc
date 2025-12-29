@@ -1,9 +1,12 @@
 # Sistema de Gestión Web (MVC)
 
 Este es un proyecto web desarrollado en **PHP** siguiendo el patrón de arquitectura **MVC (Modelo-Vista-Controlador)**. Permite la gestión administrativa de clientes, productos, pedidos y proveedores.
+
 LINK : https://julio-sistemas.free.nf/controllers/mainController.php?option=dashboard&section=proveedores
-USER:     ADMIN
-PASSWORD: ADMIN
+
+USER:     admin
+
+PASSWORD: admin
 
 ## 🚀 Tecnologías Utilizadas
 
