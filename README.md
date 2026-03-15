@@ -1,59 +1,59 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema Ventas MVC
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este proyecto es la modernización de un sistema de ventas y producción hacia un stack moderno. El objetivo principal es gestionar eficientemente las ventas, inventario de materiales, el proceso de manufactura de prendas y la comunicación con los clientes, aplicando buenas prácticas de desarrollo y un enfoque didáctico para el aprendizaje de nuevas tecnologías.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 💻 Stack Tecnológico
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+El proyecto está construido sobre un entorno moderno, pensado para facilitar el desarrollo, la escalabilidad y el despliegue:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+*   **Entorno de Desarrollo:** WSL 2 (Ubuntu en Windows) usando Visual Studio Code (Remote WSL).
+*   **Contenedores y Orquestación:** Docker Desktop y Docker Compose (Nginx, MariaDB, Redis).
+*   **Backend:** Laravel (PHP) con un fuerte enfoque en el patrón MVC, migraciones y comandos Artisan.
+*   **Frontend:**
+    *   **Motor de Plantillas:** Blade.
+    *   **Estilos y Assets:** Tailwind CSS + Vite (para empaquetado ultra rápido).
+    *   **Interactividad:** JavaScript vanilla y librerías para renderizar gráficos dinámicos en los dashboards.
+*   **Control de Versiones y Paquetes:** Git, Composer y npm.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🗄️ Estructura de la Base de Datos
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+El núcleo del sistema se basa en las siguientes entidades (gestionadas a través de migraciones de Laravel):
 
-## Laravel Sponsors
+*   `clientes`: Almacena información de contacto y comercial (`id`, `nombre`, `ruc`, `galeria_tienda`, `celular_whatsapp`, `historial_pagos`). Vital para las integraciones y comunicación.
+*   `materials`: Control de inventario de insumos (`id`, `descripcion`, `tipo`, `stock_total`, `costo_unitario`, `unidad_medida`).
+*   `estilos`: Catálogo de productos o prendas master (`id`, `nombre_estilo`, `categoria`, `foto_referencia`, `cod_molde`).
+*   `escandallos`: El "Bill of Materials" (BOM) o receta técnica de la prenda (`id`, `estilo_id`, `material_id`, `cantidad_consumo`, `porcentaje_merma`, `largo_costura`).
+*   `operacions`: Define los Minutos Estándar Permitidos (SAM) para los procesos de manufactura (`id`, `nombre`, `maquina_clase`, `tiempo_sam_minutos`).
+*   `orden_trabajos`: Controla los pedidos de fabricación a manufacturar (`id`, `cliente_id`, `estilo_id`, `cantidad_lote`, `fecha_ingreso`, `fecha_compromiso`, `estado_actual`). Los estados van fluyendo desde "Corte" hasta "Entregado".
+*   `produccion_diarias`: Registro del rendimiento y eficiencia diaria de la planta (`id`, `orden_trabajo_id`, `fecha`, `operario_nombre`, `piezas_terminadas`, `tiempo_empleado`).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## ⚙️ Lógica de Negocio Principal (Business Logic)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+El proyecto aborda las siguientes funcionalidades clave para optimizar la cadena de producción:
 
-## Contributing
+### 1. Explosión de Materiales (MRP)
+Al registrar una nueva **Orden de Trabajo**, el sistema consulta el **escandallo** del estilo a fabricar. Se calcula el requerimiento total de insumos (`Cantidad Lote x Consumo por Prenda` + `Merma`) y se cruza con el `stock_total` de **materiales** para reservar inventario o disparar alertas de déficit antes de iniciar la producción.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. Cálculo Científico de Fechas de Entrega
+La estimación de entrega de un pedido no es manual. Se suman los **tiempos SAM (Standard Allowed Minutes)** de las **operaciones** requeridas, ajustándolos por la **eficiencia histórica del taller** (derivada de la producción diaria). Este tiempo real proyecta con precisión cuándo terminará de fabricarse el lote de la **orden de trabajo**.
 
-## Code of Conduct
+### 3. Automatización de Comunicaciones (API de WhatsApp)
+El sistema informa proactivamente a los **clientes** a través de su número de WhatsApp en momentos clave, dependiendo del `estado_actual` de la **orden de trabajo**:
+*   Recepción exitosa del pedido.
+*   Avance de producción (ej. paso de "Costura" a "Acabado").
+*   Alertas directas en caso de existir déficits de insumos críticos provistos por el cliente.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 📖 Reglas de Contribución y Aprendizaje
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+> **Nota para el desarrollo:** Dado el enfoque didáctico de este proyecto, es **OBLIGATORIO** comentar cada línea o bloque de código clave que se agregue o modifique (Controladores, Modelos, Vistas de Blade, Scripts y Migraciones).
+> Se debe explicar siempre el propósito de las funciones específicas de Laravel utilizadas (e.g., Eloquent, colecciones, validaciones) para documentar el "por qué" de las implementaciones. El código priorizará la legibilidad y los nombres descriptivos en todo momento.
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+*Documentación en constante actualización a medida que se agregan nuevas características y migraciones.*
