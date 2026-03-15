@@ -23,7 +23,9 @@ Route::get('/', function () {
 });
 
 // Rutas CRUD para las Órdenes de Trabajo (generadas automáticamente por resource)
-Route::resource('ordenes', OrdenTrabajoController::class);
+Route::resource('ordenes', OrdenTrabajoController::class)->parameters([
+    'ordenes' => 'orden'
+]);
 
 // Ruta especial para actualizar el estado/etapa de una orden
 Route::patch('ordenes/{orden}/estado', [OrdenTrabajoController::class , 'actualizarEstado'])

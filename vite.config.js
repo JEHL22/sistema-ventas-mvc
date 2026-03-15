@@ -11,6 +11,11 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        host: '0.0.0.0', // Permite que Docker exponga el puerto hacia afuera
+        port: 5173,
+        hmr: {
+            host: 'localhost', // Le dice a Windows dónde escuchar los cambios en vivo
+        },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
