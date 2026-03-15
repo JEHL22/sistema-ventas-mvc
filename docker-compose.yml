@@ -1,0 +1,41 @@
+services:
+  # 1. Nuestro Servidor Web
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80" # Mapea el puerto 80 de tu PC al 80 del contenedor
+    volumes:
+      - ./:/var/www/html # Sincroniza tus archivos con el contenedor
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf # Archivo de configuración que crearemos
+    depends_on:
+      - app # Nginx no arranca si PHP no está listo
+    networks:
+      - erp-network
+
+  # 2. Nuestro Motor PHP
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile # Le diremos que construya PHP con nuestras propias reglas
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - erp-network
+
+  # 3. Nuestra Base de Datos
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: erp_confecciones # Tu base de datos lista
+      MYSQL_USER: admin_erp
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3307:3306"
+    networks:
+      - erp-network
+
+# Red interna para que los contenedores se comuniquen entre ellos
+networks:
+  erp-network:
+    driver: bridge
